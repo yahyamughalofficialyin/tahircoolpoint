@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // For storing session data
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tahircoolpoint/signup.dart';
+import 'home.dart';
 
 class Login extends StatefulWidget {
   @override
@@ -13,159 +15,263 @@ class _LoginState extends State<Login> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isLoading = false;
+  bool _obscurePassword = true;
 
-  // Function to handle login
+  @override
+  void initState() {
+    super.initState();
+    _checkIfLoggedIn();
+  }
+
+  Future<void> _checkIfLoggedIn() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('userId');
+
+    if (userId != null && userId.isNotEmpty) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => Home()),
+      );
+    }
+  }
+
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
-      final email = _emailController.text;
-      final password = _passwordController.text;
+      setState(() => _isLoading = true);
 
       try {
         final response = await http.post(
-          Uri.parse('http://localhost:3000/login'),
-          headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
-          },
+          Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/login'),
+          headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
-            'email': email,
-            'password': password,
+            'email': _emailController.text,
+            'password': _passwordController.text,
           }),
         );
 
+        final responseData = jsonDecode(response.body);
+
         if (response.statusCode == 200) {
-          final responseData = jsonDecode(response.body);
-          final user = responseData['user'];
-
-          // Save session data (e.g., user ID or token)
+          // Save user information
           final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('userEmail', user['email']);
-          await prefs.setString('userName', user['name']);
+          await prefs.setString('userId', responseData['user']['id']);
+          await prefs.setString('userName', responseData['user']['name']);
 
-          // Show success toast
-          Fluttertoast.showToast(
-            msg: 'Login Successful!',
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.TOP,
-            backgroundColor: Colors.green,
-            textColor: Colors.white,
+          // Save cookies for session persistence
+          final cookies = response.headers['set-cookie'];
+          if (cookies != null) {
+            await prefs.setString('sessionCookies', cookies);
+          }
+
+          _showToast('Login successful!', Colors.green);
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => Home()),
           );
-
-          // Navigate to the home screen or profile
-          Navigator.pushReplacementNamed(context, '/home');
         } else {
-          Fluttertoast.showToast(
-            msg: 'Login Failed: ${response.body}',
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.TOP,
-            backgroundColor: Colors.red,
-            textColor: Colors.white,
-          );
+          _showToast(responseData['message'] ?? 'Login failed', Colors.red);
         }
       } catch (e) {
-        Fluttertoast.showToast(
-          msg: 'Network Error! Unable to connect to the server.',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.TOP,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-        );
+        _showToast('Network error: ${e.toString()}', Colors.red);
+      } finally {
+        setState(() => _isLoading = false);
       }
     }
+  }
+
+  void _showToast(String message, Color color) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      backgroundColor: color,
+      textColor: Colors.white,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Login'),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              SizedBox(height: 20),
-              // Email Field
-              TextFormField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: Color(0xFF00A7DD)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: Color(0xFF00A7DD)),
-                  ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Logo and Title
+                Column(
+                  children: [
+                    Icon(Icons.account_circle, size: 100, color: Colors.white),
+                    SizedBox(height: 16),
+                    Text(
+                      'Welcome Back',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Sign in to continue',
+                      style: TextStyle(fontSize: 16, color: Colors.white70),
+                    ),
+                  ],
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  if (!value.contains('@')) {
-                    return 'Please enter a valid email';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 20),
-              // Password Field
-              TextFormField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: Color(0xFF00A7DD)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: Color(0xFF00A7DD)),
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
-                  }
-                  if (value.length < 6) {
-                    return 'Password must be at least 6 characters';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 30),
-              // Login Button
-              ElevatedButton(
-                onPressed: _login,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF00A7DD),
-                  padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+
+                SizedBox(height: 40),
+
+                // Login Form
+                Card(
+                  elevation: 8,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _emailController,
+                            decoration: InputDecoration(
+                              labelText: 'Email',
+                              prefixIcon: Icon(Icons.email),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            validator: (value) => 
+                                value!.isEmpty ? 'Please enter email' : null,
+                            keyboardType: TextInputType.emailAddress,
+                          ),
+                          SizedBox(height: 16),
+                          TextFormField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              prefixIcon: Icon(Icons.lock),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword 
+                                    ? Icons.visibility 
+                                    : Icons.visibility_off,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            validator: (value) => 
+                                value!.isEmpty ? 'Please enter password' : null,
+                          ),
+                          SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {
+                                // Add forgot password functionality
+                              },
+                              child: Text('Forgot Password?'),
+                            ),
+                          ),
+                          SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xFF2575FC),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                elevation: 4,
+                              ),
+                              onPressed: _isLoading ? null : _login,
+                              child: _isLoading 
+                                  ? SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Text(
+                                      'LOGIN',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-                child: Text(
-                  'Login',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
+
+                SizedBox(height: 24),
+
+                // Sign up option
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Don't have an account?",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        // Add navigation to sign up screen
+                      },
+                      child: TextButton(
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => Signup()),
+                        );
+                      },
+                      child: Text(
+                        'Sign Up',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    ),
+                  ],
                 ),
-              ),
-              SizedBox(height: 20),
-              // Sign Up Link
-              
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "606853221987",
+    "project_id": "tahircoolpoint-75ab0",
+    "storage_bucket": "tahircoolpoint-75ab0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:606853221987:android:e00e8b15e4e711d7a93256",
+        "android_client_info": {
+          "package_name": "com.example.tahircoolpoint"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCYYmC3z0NmdLnuLNsJW0CDyURHcfHepUs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
