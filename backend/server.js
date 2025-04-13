@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
@@ -5,8 +6,9 @@ const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const session = require("express-session");
 
+
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // CORS configuration
 app.use(
@@ -358,6 +360,39 @@ app.post("/api/orders", async (req, res) => {
   } catch (error) {
     console.error("Error creating order:", error);
     res.status(500).json({ message: "Error creating order" });
+  }
+});
+
+// Payment endpoint
+app.post("/api/orders/payment", async (req, res) => {
+  try {
+    const { orderId, paymentMethod, paymentId } = req.body;
+
+    // Validate input
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({ message: "Invalid order ID" });
+    }
+
+    // Find and update the order
+    const updatedOrder = await Order.findByIdAndUpdate(
+      orderId,
+      { 
+        status: "paid",
+        paymentMethod,
+        paymentId: paymentMethod !== "cash" ? paymentId : null,
+        paidAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (!updatedOrder) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.status(200).json({ message: "Payment processed successfully" });
+  } catch (error) {
+    console.error("Payment processing error:", error);
+    res.status(500).json({ message: "Error processing payment" });
   }
 });
 

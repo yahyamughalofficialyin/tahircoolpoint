@@ -1,13 +1,15 @@
+import 'dart:ui';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:tahircoolpoint/login.dart';
-import 'package:video_player/video_player.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login.dart';
 import 'signup.dart';
 import 'home.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_blurhash/flutter_blurhash.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,27 +63,47 @@ class SplashScreen extends StatefulWidget {
   _SplashScreenState createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
-  late VideoPlayerController _controller;
+class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
   bool _showError = false;
+  bool _animationCompleted = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.asset('videos/splash.mp4')
-      ..initialize().then((_) {
-        setState(() {});
-        _controller.play();
-        if (widget.firebaseInitialized) {
-          _checkIfLoggedIn(); // Only check login if Firebase is initialized
-        } else {
-          _showFirebaseError();
-        }
+    
+    // Initialize animation controller with 3 second duration
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(seconds: 3),
+    );
+    
+    // Create scale animation
+    _scaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween<double>(begin: 0.7, end: 1.1), weight: 50),
+      TweenSequenceItem(tween: Tween<double>(begin: 1.1, end: 1.0), weight: 50),
+    ]).animate(_animationController);
+    
+    // Create fade animation
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+    
+    // Start animation
+    _animationController.forward().whenComplete(() {
+      setState(() {
+        _animationCompleted = true;
       });
-
-    _controller.addListener(() {
-      if (_controller.value.position >= _controller.value.duration) {
-        // Navigation is now handled in _checkIfLoggedIn or _showFirebaseError
+      // Check Firebase status and proceed accordingly
+      if (widget.firebaseInitialized) {
+        _checkIfLoggedIn();
+      } else {
+        _showFirebaseError();
       }
     });
   }
@@ -96,11 +118,6 @@ class _SplashScreenState extends State<SplashScreen> {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString('userId');
 
-    // Wait until the video is finished playing
-    while (_controller.value.position < _controller.value.duration) {
-      await Future.delayed(Duration(milliseconds: 100));
-    }
-
     if (userId != null && userId.isNotEmpty) {
       Get.off(() => Home()); // Navigate to Home if logged in
     } else {
@@ -110,15 +127,38 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _showError
-          ? Center(
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Blurred background image
+          ColorFiltered(
+            colorFilter: ColorFilter.mode(
+              Colors.black.withOpacity(0.2),
+              BlendMode.darken,
+            ),
+            child: Image.asset(
+              'images/bg.png',
+              fit: BoxFit.cover,
+            ),
+          ),
+          
+          // Blur effect
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+            child: Container(
+              color: Colors.black.withOpacity(0.1),
+            ),
+          ),
+          
+          if (_showError)
+            Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -126,12 +166,13 @@ class _SplashScreenState extends State<SplashScreen> {
                   SizedBox(height: 20),
                   Text(
                     'Firebase Connection Failed',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                   SizedBox(height: 10),
                   Text(
                     'Please check your internet connection and try again',
                     textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white),
                   ),
                   SizedBox(height: 20),
                   ElevatedButton(
@@ -145,14 +186,39 @@ class _SplashScreenState extends State<SplashScreen> {
                 ],
               ),
             )
-          : _controller.value.isInitialized
-              ? Center(
-                  child: AspectRatio(
-                    aspectRatio: _controller.value.aspectRatio,
-                    child: VideoPlayer(_controller),
-                  ),
-                )
-              : Center(child: CircularProgressIndicator()),
+          else
+            Center(
+              child: AnimatedBuilder(
+                animation: _animationController,
+                builder: (context, child) {
+                  return Transform.scale(
+                    scale: _scaleAnimation.value,
+                    child: Opacity(
+                      opacity: _fadeAnimation.value,
+                      child: Image.asset(
+                        'images/icon.png',
+                        width: 150,
+                        height: 150,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          
+          if (_animationCompleted && !_showError)
+            Positioned(
+              bottom: 50,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

@@ -32,7 +32,7 @@ class _SignupState extends State<Signup> {
       if (googleUser == null) return;
 
       final response = await http.post(
-        Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/social-signup'),
+        Uri.parse('http://localhost:3000/social-signup'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'name': googleUser.displayName ?? 'Google User',
@@ -70,7 +70,7 @@ class _SignupState extends State<Signup> {
 
       try {
         final response = await http.post(
-          Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/signup'),
+          Uri.parse('http://localhost:3000/signup'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode(requestBody),
         );
@@ -108,7 +108,10 @@ class _SignupState extends State<Signup> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFfe0000), Color(0xFF000000)],
+            stops: [0.0, 0.8],
           ),
         ),
         child: Center(
@@ -225,7 +228,7 @@ class _SignupState extends State<Signup> {
                             height: 50,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Color(0xFF2575FC),
+                                backgroundColor: Color(0xFFfe0000),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -233,7 +236,7 @@ class _SignupState extends State<Signup> {
                               onPressed: _isLoading ? null : _submitForm,
                               child: _isLoading
                                   ? CircularProgressIndicator(color: Colors.white)
-                                  : Text('SIGN UP'),
+                                  : Text('SIGN UP', style: TextStyle(color: Colors.white)),
                             ),
                           ),
                         ],
@@ -296,7 +299,10 @@ class _SignupState extends State<Signup> {
                         MaterialPageRoute(builder: (context) => Login()),
                       ),
                       child: Text('Sign In', 
-                          style: TextStyle(color: Colors.white)),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          )),
                     ),
                   ],
                 ),

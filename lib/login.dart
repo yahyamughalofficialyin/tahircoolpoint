@@ -42,7 +42,7 @@ class _LoginState extends State<Login> {
 
       try {
         final response = await http.post(
-          Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/login'),
+          Uri.parse('http://localhost:3000/login'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
             'email': _emailController.text,
@@ -98,7 +98,8 @@ class _LoginState extends State<Login> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+            colors: [Color(0xFFfe0000), Color(0xFF000000)],
+            stops: [0.0, 0.8],
           ),
         ),
         child: Center(
@@ -188,7 +189,7 @@ class _LoginState extends State<Login> {
                               onPressed: () {
                                 // Add forgot password functionality
                               },
-                              child: Text('Forgot Password?'),
+                              child: Text('Forgot Password?', style: TextStyle(color: Colors.black)),
                             ),
                           ),
                           SizedBox(height: 16),
@@ -197,7 +198,7 @@ class _LoginState extends State<Login> {
                             height: 50,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Color(0xFF2575FC),
+                                backgroundColor: Color(0xFFfe0000),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -218,6 +219,7 @@ class _LoginState extends State<Login> {
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
+                                        color: Colors.white,
                                       ),
                                     ),
                             ),
@@ -240,10 +242,6 @@ class _LoginState extends State<Login> {
                     ),
                     TextButton(
                       onPressed: () {
-                        // Add navigation to sign up screen
-                      },
-                      child: TextButton(
-                      onPressed: () {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(builder: (context) => Signup()),
@@ -256,7 +254,6 @@ class _LoginState extends State<Login> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
                     ),
                   ],
                 ),

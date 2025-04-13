@@ -121,7 +121,7 @@ class _HomeState extends State<Home> {
 
     try {
       final response = await http.get(
-        Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/api/sliders'),
+        Uri.parse('http://localhost:3000/api/sliders'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -155,7 +155,7 @@ class _HomeState extends State<Home> {
 
     try {
       final response = await http.get(
-        Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/api/categories'),
+        Uri.parse('http://localhost:3000/api/categories'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -192,7 +192,7 @@ class _HomeState extends State<Home> {
         ),
         title: Row(
           children: [
-            Image.asset('images/logo.png', height: 60),
+            Image.asset('images/icon.png', height: 60),
             Spacer(),
             Text(
               'Hi, $_userName',
@@ -239,43 +239,61 @@ class _HomeState extends State<Home> {
         ),
       ),
       bottomNavigationBar: ClipRRect(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        child: BottomAppBar(
-          color: _isDarkMode ? Color(0xFF1E1E1E) : Color(0xFFFFFFFF),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              IconButton(
-                icon: Icon(Icons.shopping_cart, color: Color(0xFF00A7DD)),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => Order()),
-                  );
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.home, color: Color(0xFF00A7DD)),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => Home()),
-                  );
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.person, color: Color(0xFF00A7DD)),
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ProfilePage()),
-                ),
-              ),
-            ],
+  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+  child: BottomAppBar(
+    color: Colors.white, // Keep the bar white
+    elevation: 4,
+    child: Container(
+      height: 60,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildGradientIconButton(
+            icon: Icons.shopping_cart,
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Order()),
+            ),
           ),
-        ),
+          _buildGradientIconButton(
+            icon: Icons.home,
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Home()),
+            ),
+          ),
+          _buildGradientIconButton(
+            icon: Icons.person,
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ProfilePage()),
+            ),
+          ),
+        ],
       ),
+    ),
+  ),
+),
+
+
     );
   }
+
+// Add this helper method to your _HomeState class
+Widget _buildGradientIconButton({required IconData icon, required VoidCallback onPressed}) {
+  return IconButton(
+    icon: ShaderMask(
+      shaderCallback: (Rect bounds) {
+        return LinearGradient(
+          colors: [Color(0xFFfe0000), Color(0xFF000000)],
+          stops: [0.0, 0.8],
+        ).createShader(bounds);
+      },
+      child: Icon(icon, size: 28, color: Colors.white),
+    ),
+    onPressed: onPressed,
+  );
+}
 
   Widget _buildSliderCarousel(double height) {
     return Column(
@@ -334,51 +352,55 @@ class _HomeState extends State<Home> {
   }
 
   Widget _buildCategoriesGrid() {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      padding: EdgeInsets.all(12),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 0.85,
-      ),
-      itemCount: _categories.length,
-      itemBuilder: (context, index) {
-        return _buildCategoryCard(_categories[index]);
-      },
-    );
-  }
+  return GridView.builder(
+    shrinkWrap: true,
+    physics: NeverScrollableScrollPhysics(),
+    padding: EdgeInsets.all(12),
+    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: 3,
+      crossAxisSpacing: 8,
+      mainAxisSpacing: 8,
+      childAspectRatio: 0.85, // Slightly adjusted for better proportions
+    ),
+    itemCount: _categories.length,
+    itemBuilder: (context, index) {
+      return _buildCategoryCard(_categories[index]);
+    },
+  );
+}
 
   Widget _buildCategoryCard(CategoryModel category) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => Category(
-              categoryId: category.id,
-              categoryName: category.name,
-            ),
+  return GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Category(
+            categoryId: category.id,
+            categoryName: category.name,
           ),
-        );
-      },
-      child: Card(
-        elevation: 3,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
+        ),
+      );
+    },
+    child: Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Image container with same size but smaller image
+          Container(
+            height: 100, // Maintain container height
+            padding: EdgeInsets.all(5),
+            child: Center( // Center the smaller image
+              child: Container(
+                width: 80, // Smaller image width
+                height: 50, // Smaller image height
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: CachedNetworkImage(
                     imageUrl: category.imageUrl,
                     fit: BoxFit.cover,
-                    width: double.infinity,
                     placeholder: (context, url) => Container(
                       color: Colors.grey[200],
                       child: Center(child: CircularProgressIndicator()),
@@ -391,22 +413,24 @@ class _HomeState extends State<Home> {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: Text(
-                category.name,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+          ),
+          // Category name
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: Text(
+              category.name,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
               ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 }

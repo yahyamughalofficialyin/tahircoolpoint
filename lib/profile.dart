@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'login.dart'; // Make sure to import your login page
+import 'dart:ui';
+import 'login.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  const ProfilePage({Key? key}) : super(key: key);
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  late String userId = '';
-  late String userName = 'User';
-  late String userEmail = 'No email';
-  late String userPhone = 'No phone';
+  String userId = '';
+  String userName = 'User';
+  String userEmail = 'No email';
+  String userPhone = 'No phone';
   bool isLoading = true;
   bool isLoggingOut = false;
 
@@ -50,7 +52,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _fetchUserDetails() async {
     try {
       final response = await http.get(
-        Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/api/user/$userId'),
+        Uri.parse('http://localhost:3000/api/user/$userId'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -77,7 +79,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _updateEmail(String newEmail) async {
     try {
       final response = await http.put(
-        Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/api/user/email/$userId'),
+        Uri.parse('http://localhost:3000/api/user/email/$userId'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'email': newEmail}),
       );
@@ -100,7 +102,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _updatePassword(String oldPassword, String newPassword) async {
     try {
       final response = await http.put(
-        Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/api/user/password/$userId'),
+        Uri.parse('http://localhost:3000/api/user/password/$userId'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'oldPassword': oldPassword,
@@ -128,18 +130,15 @@ class _ProfilePageState extends State<ProfilePage> {
     });
 
     try {
-      // First call the server logout endpoint
       final response = await http.post(
-        Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/logout'),
+        Uri.parse('http://localhost:3000/logout'),
         headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200) {
-        // Clear local storage
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove('userId');
         
-        // Navigate to login screen and remove all previous routes
         if (!mounted) return;
         Navigator.pushAndRemoveUntil(
           context,
@@ -179,109 +178,156 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Widget _buildGradientIcon(IconData icon) {
+    return ShaderMask(
+      shaderCallback: (Rect bounds) {
+        return const LinearGradient(
+          colors: [Color(0xFFfe0000), Color(0xFF000000)],
+          stops: [0.0, 1.0],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(bounds);
+      },
+      child: Icon(icon, color: Colors.white),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        systemOverlayStyle: SystemUiOverlayStyle.light,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: _buildGradientIcon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text('Profile'),
+        title: const Text('Profile', style: TextStyle(color: Colors.white)),
         centerTitle: true,
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Hello $userName!',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        ListTile(
-                          leading: const Icon(Icons.person),
-                          title: Text(userName),
-                        ),
-                        const Divider(height: 1, indent: 16, endIndent: 16),
-                        ListTile(
-                          leading: const Icon(Icons.email),
-                          title: Text(userEmail),
-                        ),
-                        const Divider(height: 1, indent: 16, endIndent: 16),
-                        ListTile(
-                          leading: const Icon(Icons.phone),
-                          title: Text(userPhone),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        ListTile(
-                          leading: const Icon(Icons.edit, color: Colors.blue),
-                          title: const Text('Change Email'),
-                          onTap: () => _showChangeEmailDialog(context),
-                        ),
-                        const Divider(height: 1, indent: 16, endIndent: 16),
-                        ListTile(
-                          leading: const Icon(Icons.lock, color: Colors.blue),
-                          title: const Text('Change Password'),
-                          onTap: () => _showChangePasswordDialog(context),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      icon: isLoggingOut 
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Icon(Icons.logout, color: Colors.white),
-                      label: Text(
-                        isLoggingOut ? 'Logging out...' : 'Logout',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: _logout,
-                    ),
-                  ),
-                ],
-              ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFFfe0000), Color(0xFF000000)],
+              stops: [0.0, 0.8],
             ),
+          ),
+        ),
+      ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('images/bg.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+          child: Container(
+            color: Colors.black.withOpacity(0.3),
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Hello $userName!',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Card(
+                          elevation: 4,
+                          color: Colors.black.withOpacity(0.5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            children: [
+                              ListTile(
+                                leading: _buildGradientIcon(Icons.person),
+                                title: Text(userName, style: const TextStyle(color: Colors.white)),
+                              ),
+                              const Divider(height: 1, indent: 16, endIndent: 16, color: Colors.grey),
+                              ListTile(
+                                leading: _buildGradientIcon(Icons.email),
+                                title: Text(userEmail, style: const TextStyle(color: Colors.white)),
+                              ),
+                              const Divider(height: 1, indent: 16, endIndent: 16, color: Colors.grey),
+                              ListTile(
+                                leading: _buildGradientIcon(Icons.phone),
+                                title: Text(userPhone, style: const TextStyle(color: Colors.white)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Card(
+                          elevation: 4,
+                          color: Colors.black.withOpacity(0.5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            children: [
+                              ListTile(
+                                leading: _buildGradientIcon(Icons.edit),
+                                title: const Text('Change Email', style: TextStyle(color: Colors.white)),
+                                onTap: () => _showChangeEmailDialog(context),
+                              ),
+                              const Divider(height: 1, indent: 16, endIndent: 16, color: Colors.grey),
+                              ListTile(
+                                leading: _buildGradientIcon(Icons.lock),
+                                title: const Text('Change Password', style: TextStyle(color: Colors.white)),
+                                onTap: () => _showChangePasswordDialog(context),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            icon: isLoggingOut 
+                                ? SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: const CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : _buildGradientIcon(Icons.logout),
+                            label: Text(
+                              isLoggingOut ? 'Logging out...' : 'Logout',
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black.withOpacity(0.7),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: _logout,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -292,14 +338,23 @@ class _ProfilePageState extends State<ProfilePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Change Email'),
+        title: const Text('Change Email', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.grey[900],
         content: Form(
           key: formKey,
           child: TextFormField(
             controller: emailController,
-            decoration: const InputDecoration(
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
               labelText: 'New Email',
-              border: OutlineInputBorder(),
+              labelStyle: const TextStyle(color: Colors.grey),
+              border: const OutlineInputBorder(),
+              enabledBorder: const OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey),
+              ),
+              focusedBorder: const OutlineInputBorder(
+                borderSide: BorderSide(color: Color(0xFFfe0000)),
+              ),
             ),
             keyboardType: TextInputType.emailAddress,
             validator: (value) {
@@ -316,9 +371,12 @@ class _ProfilePageState extends State<ProfilePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white)),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFfe0000),
+            ),
             onPressed: () async {
               if (formKey.currentState!.validate()) {
                 final newEmail = emailController.text.trim();
@@ -331,7 +389,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 await _updateEmail(newEmail);
               }
             },
-            child: const Text('Save'),
+            child: const Text('Save', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -346,7 +404,8 @@ class _ProfilePageState extends State<ProfilePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Change Password'),
+        title: const Text('Change Password', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.grey[900],
         content: Form(
           key: formKey,
           child: Column(
@@ -354,9 +413,17 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               TextFormField(
                 controller: oldPasswordController,
-                decoration: const InputDecoration(
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
                   labelText: 'Old Password',
-                  border: OutlineInputBorder(),
+                  labelStyle: const TextStyle(color: Colors.grey),
+                  border: const OutlineInputBorder(),
+                  enabledBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.grey),
+                  ),
+                  focusedBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFFfe0000)),
+                  ),
                 ),
                 obscureText: true,
                 validator: (value) {
@@ -369,9 +436,17 @@ class _ProfilePageState extends State<ProfilePage> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: newPasswordController,
-                decoration: const InputDecoration(
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
                   labelText: 'New Password',
-                  border: OutlineInputBorder(),
+                  labelStyle: const TextStyle(color: Colors.grey),
+                  border: const OutlineInputBorder(),
+                  enabledBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.grey),
+                  ),
+                  focusedBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFFfe0000)),
+                  ),
                 ),
                 obscureText: true,
                 validator: (value) {
@@ -390,9 +465,12 @@ class _ProfilePageState extends State<ProfilePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white)),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFfe0000),
+            ),
             onPressed: () async {
               if (formKey.currentState!.validate()) {
                 final oldPass = oldPasswordController.text.trim();
@@ -402,7 +480,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 await _updatePassword(oldPass, newPass);
               }
             },
-            child: const Text('Save'),
+            child: const Text('Save', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
