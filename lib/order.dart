@@ -54,7 +54,7 @@ class _OrderState extends State<Order> {
   Future<void> _fetchOrders() async {
     try {
       final ordersResponse = await http.get(
-        Uri.parse('http://localhost:3000/api/my-orders/$userId'),
+        Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/my-orders/$userId'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -62,7 +62,7 @@ class _OrderState extends State<Order> {
         final List<dynamic> fetchedOrders = json.decode(ordersResponse.body);
         
         final productsResponse = await http.get(
-          Uri.parse('http://localhost:3000/api/products/'),
+          Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/products/'),
           headers: {'Content-Type': 'application/json'},
         );
 

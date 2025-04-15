@@ -48,7 +48,7 @@ class ApiService {
   // You can add other API-related functions here
   static Future<http.Response> login(String email, String password) async {
     return await http.post(
-      Uri.parse('http://localhost:3000/login'),
+      Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/login'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email, 'password': password}),
     );

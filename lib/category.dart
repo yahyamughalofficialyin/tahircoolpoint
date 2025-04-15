@@ -87,7 +87,7 @@ class _CategoryState extends State<Category> {
     try {
       final response = await http.get(
         Uri.parse(
-          'http://localhost:3000/api/products/category/${widget.categoryId}',
+          'https://tahircoolpoint.shaheencodecrafters.com/products/category/${widget.categoryId}',
         ),
         headers: {'Content-Type': 'application/json'},
       );
@@ -136,7 +136,7 @@ class _CategoryState extends State<Category> {
       }
 
       final response = await http.post(
-        Uri.parse('http://localhost:3000/api/orders'),
+        Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/orders'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Cookie': cookies ?? '',

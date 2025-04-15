@@ -24,7 +24,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:3000/api/orders/payment'),
+        Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/orders/payment'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'orderId': widget.orderId,

@@ -121,7 +121,7 @@ class _HomeState extends State<Home> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:3000/api/sliders'),
+        Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/sliders'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -155,7 +155,7 @@ class _HomeState extends State<Home> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:3000/api/categories'),
+        Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/categories'),
         headers: {'Content-Type': 'application/json'},
       );
 

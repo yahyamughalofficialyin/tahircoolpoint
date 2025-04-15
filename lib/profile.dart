@@ -52,7 +52,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _fetchUserDetails() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:3000/api/user/$userId'),
+        Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/user/$userId'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -79,7 +79,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _updateEmail(String newEmail) async {
     try {
       final response = await http.put(
-        Uri.parse('http://localhost:3000/api/user/email/$userId'),
+        Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/user/email/$userId'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'email': newEmail}),
       );
@@ -102,7 +102,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _updatePassword(String oldPassword, String newPassword) async {
     try {
       final response = await http.put(
-        Uri.parse('http://localhost:3000/api/user/password/$userId'),
+        Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/user/password/$userId'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'oldPassword': oldPassword,
@@ -131,7 +131,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:3000/logout'),
+        Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/logout'),
         headers: {'Content-Type': 'application/json'},
       );
 

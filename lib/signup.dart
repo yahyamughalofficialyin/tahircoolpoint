@@ -32,7 +32,7 @@ class _SignupState extends State<Signup> {
       if (googleUser == null) return;
 
       final response = await http.post(
-        Uri.parse('http://localhost:3000/social-signup'),
+        Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/social-signup'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'name': googleUser.displayName ?? 'Google User',
@@ -70,7 +70,7 @@ class _SignupState extends State<Signup> {
 
       try {
         final response = await http.post(
-          Uri.parse('http://localhost:3000/signup'),
+          Uri.parse('https://tahircoolpoint.shaheencodecrafters.com/signup'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode(requestBody),
         );
